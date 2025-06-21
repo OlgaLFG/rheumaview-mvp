@@ -37,22 +37,31 @@ today_default = datetime.date.today()
 study_date = st.date_input("Date of current study:", value=today_default)
 
 st.markdown("### Step 2: Patient Demographics")
-age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1)
+dob = st.text_input("Date of Birth (optional, YYYY-MM-DD):")
+calculated_age = ""
+if dob:
+    try:
+        birth_date = datetime.datetime.strptime(dob, "%Y-%m-%d").date()
+        today = datetime.date.today()
+        calculated_age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    except:
+        calculated_age = ""
+
+age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1, value=calculated_age if isinstance(calculated_age, int) else 0)
 sex = st.radio("Sex at Birth:", ["Female", "Male", "Other / Intersex"])
 name = st.text_input("Patient Name or ID (optional):")
-dob = st.text_input("Date of Birth (optional):")
 mrn = st.text_input("Medical Record Number (optional):")
 clinical_context = st.text_area("Optional: Clinical summary (symptoms, known diagnoses, exam findings, etc.)",
                                 max_chars=10000, height=150)
 
 st.markdown("### Step 3: Select Regions to Analyze")
 region_options = [
-    "Multiple Regions (auto-assign by user)",
+    "Multiple Regions",
     "Cervical Spine", "Thoracic Spine", "Lumbar Spine", "Pelvis / SI joints",
     "Hip", "Knee", "Ankle", "Foot", "Hand", "Wrist", "Elbow", "Shoulder",
     "Other Regions (e.g., ribs, clavicle, forearm, chest, etc.)"
 ]
-regions = st.multiselect("Select anatomical regions shown in the uploaded images:", region_options, default=["Multiple Regions (auto-assign by user)"])
+regions = st.multiselect("Select anatomical regions shown in the uploaded images:", region_options, default=["Multiple Regions"])
 
 mode = st.radio("Report type:", ["Single report", "Report with interval change analysis"])
 
