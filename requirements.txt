@@ -2,3 +2,4 @@ streamlit
 fpdf2
 fpdf
 Pillow
+python-docx
