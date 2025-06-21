@@ -14,6 +14,7 @@ This app does not perform automated radiologic interpretation or image recogniti
 The text content of this report is manually entered by the user.
 Any subsequent edits made after download are not monitored or controlled by the system.
 Please verify and finalize content before inserting into medical records.
+Patient identifiers are not stored on any server. Reports are saved only to the user’s device.
 """)
 
 # --- LOGO ---
@@ -35,13 +36,30 @@ uploaded_current = st.file_uploader(
 today_default = datetime.date.today()
 study_date = st.date_input("Date of current study:", value=today_default)
 
-st.markdown("### Step 2: Clinical Information")
+# --- DEMOGRAPHICS ---
+st.markdown("### Step 2: Patient Demographics")
+patient_name = st.text_input("Patient Name (optional)")
+mrn = st.text_input("MRN / Identifier (optional)")
+dob = st.text_input("Date of Birth (optional)")
 age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1)
 sex = st.radio("Sex at Birth:", ["Female", "Male", "Other / Intersex"])
+referring = st.text_input("Referring Physician (optional)")
+
+st.markdown("### Step 3: Clinical Information")
 clinical_context = st.text_area("Optional: Clinical summary (symptoms, known diagnoses, exam findings, etc.)",
                                 max_chars=10000, height=150)
 
-st.markdown("### Step 3: Select Regions to Analyze")
+# --- HEADER/FOOTER ---
+st.markdown("### Step 4: Report Formatting Options")
+add_header_footer = st.checkbox("Include custom header and footer in final report")
+custom_header = ""
+custom_footer = ""
+if add_header_footer:
+    custom_header = st.text_area("Enter Header Text", height=60)
+    custom_footer = st.text_area("Enter Footer Text", height=60)
+
+# --- REGIONS ---
+st.markdown("### Step 5: Select Regions to Analyze")
 region_options = [
     "Multiple Regions (auto-assign by user)",
     "Cervical Spine", "Thoracic Spine", "Lumbar Spine", "Pelvis / SI joints",
@@ -57,7 +75,7 @@ prior_images = {}
 if mode == "Report with interval change analysis":
     compare_enabled = st.checkbox("Compare with prior imaging?")
     if compare_enabled:
-        st.markdown("### Step 4: Upload Prior Imaging for Comparison")
+        st.markdown("### Step 6: Upload Prior Imaging for Comparison")
         num_priors = st.number_input("How many prior studies to upload?", min_value=1, max_value=5, step=1)
         for i in range(num_priors):
             st.markdown(f"**Prior Study {i+1}:**")
@@ -99,27 +117,20 @@ if confirmed_all and ready:
 
     summary = st.text_area("Optional: Add a brief EMR-friendly summary (will be included separately):", height=200)
 
-    full_report = f"RheumaView Structured Report\nDate of Current Study: {study_date}\n\n"
-    full_report += f"Patient Age: {age}\nSex at Birth: {sex}\n"
-
-    full_report += "\nRheumaView Report\nDate of Current Study: {}\n".format(study_date)
-    for region, text in findings.items():
-        full_report += f"---\nRegion: {region}\n{text}\n"
-
-    if compare_enabled and prior_images:
-        full_report += "\n---\nInterval Comparison:\n"
-        for label, data in prior_images.items():
-            full_report += f"{label} ({data['date']}): Compared for progression/regression relative to current study.\n"
-
-    if summary.strip():
-        full_report += "\n\n=== EMR Summary ===\n" + summary.strip()
-
     doc = Document()
+    if add_header_footer and custom_header:
+        doc.sections[0].header.paragraphs[0].text = custom_header
     doc.add_heading("RheumaView Structured Report", 0)
     doc.add_paragraph(f"Date of Current Study: {study_date}")
-    doc.add_paragraph(f"Patient Age: {age}")
+    doc.add_paragraph(f"Patient Name: {patient_name}")
+    doc.add_paragraph(f"MRN: {mrn}")
+    doc.add_paragraph(f"Date of Birth: {dob}")
+    doc.add_paragraph(f"Age: {age}")
     doc.add_paragraph(f"Sex at Birth: {sex}")
-    doc.add_paragraph("")
+    doc.add_paragraph(f"Referring Physician: {referring}")
+    if clinical_context:
+        doc.add_paragraph("Clinical Summary:")
+        doc.add_paragraph(clinical_context)
 
     doc.add_heading("RheumaView Report", level=1)
     for region, text in findings.items():
@@ -136,13 +147,16 @@ if confirmed_all and ready:
         doc.add_paragraph("=== EMR Summary ===")
         doc.add_paragraph(summary.strip())
 
-    word_filename = "rheumaview_structured_report.docx"
-    doc.save(word_filename)
+    if add_header_footer and custom_footer:
+        doc.sections[0].footer.paragraphs[0].text = custom_footer
 
-    with open(word_filename, "rb") as file:
+    filename = f"rheumaview_{study_date}_{sex[0]}_{age}.docx"
+    doc.save(filename)
+
+    with open(filename, "rb") as file:
         st.download_button(
             label="Download Word Report",
             data=file,
-            file_name=word_filename,
+            file_name=filename,
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
