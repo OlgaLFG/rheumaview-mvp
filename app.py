@@ -19,7 +19,7 @@ st.caption("Curated by Dr. Olga Goodman")
 st.markdown("### Step 1: Upload Current Imaging")
 uploaded_current = st.file_uploader(
     "Upload current radiographic images (multiple files allowed)", 
-    type=["jpg", "jpeg", "png", "dcm"], 
+    type=["jpg", "jpeg", "png", "dcm", "webp", "bmp", "tiff"], 
     accept_multiple_files=True
 )
 
@@ -51,7 +51,7 @@ if mode == "Report with interval change analysis":
             st.markdown(f"**Prior Study {i+1}:**")
             files = st.file_uploader(
                 f"Upload image files for prior study #{i+1}", 
-                type=["jpg", "jpeg", "png", "dcm"], 
+                type=["jpg", "jpeg", "png", "dcm", "webp", "bmp", "tiff"], 
                 accept_multiple_files=True, 
                 key=f"prior_{i}"
             )
