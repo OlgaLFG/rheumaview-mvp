@@ -91,8 +91,6 @@ if confirmed_all and ready:
     # Generate report text
     full_report = f"RheumaView™ Structured Report\nDate of Current Study: {study_date}\n\n"
     full_report += f"Patient Age: {age}\nSex at Birth: {sex}\n"
-    if clinical_context.strip():
-        full_report += "(Clinical context was provided but is not included in this report text.)\n"
 
     full_report += "\nRheumaView™ Report\nDate of Current Study: {}\n".format(study_date)
     for region, text in findings.items():
@@ -113,8 +111,6 @@ if confirmed_all and ready:
     doc.add_paragraph(f"Date of Current Study: {study_date}")
     doc.add_paragraph(f"Patient Age: {age}")
     doc.add_paragraph(f"Sex at Birth: {sex}")
-    if clinical_context.strip():
-        doc.add_paragraph("(Clinical context was provided but is not included in this report text.)")
     doc.add_paragraph("")
 
     doc.add_heading("RheumaView™ Report", level=1)
