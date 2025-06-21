@@ -12,10 +12,16 @@ logo = Image.open("logo.png")
 st.image(logo, width=100)
 
 # --- HEADER ---
-st.title("RheumaView™")
+st.title("RheumaView")
 st.subheader("Radiologic Reasoning for Rheumatologists")
 st.caption("Curated by Dr. Olga Goodman")
 
+# --- DISCLAIMER ---
+st.markdown("---")
+st.markdown("**Disclaimer:** This application assists with structured reporting based on user input. It does not interpret medical images. All uploaded content is processed locally, and all report text is user-generated. RheumaView does not verify or alter user-entered content. Post-generation edits, corrections, and EMR integration are the sole responsibility of the user.")
+st.markdown("---")
+
+# --- STEP 1: CURRENT IMAGING ---
 st.markdown("### Step 1: Upload Current Imaging")
 uploaded_current = st.file_uploader(
     "Upload current radiographic images (multiple files allowed)", 
@@ -26,28 +32,19 @@ uploaded_current = st.file_uploader(
 today_default = datetime.date.today()
 study_date = st.date_input("Date of current study:", value=today_default)
 
+# --- STEP 2: CLINICAL INFO ---
 st.markdown("### Step 2: Clinical Information")
 age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1)
 sex = st.radio("Sex at Birth:", ["Female", "Male", "Other / Intersex"])
-clinical_context = st.text_area("Optional: Clinical summary (symptoms, known diagnoses, exam findings, etc.)",
-                                max_chars=10000, height=150)
+clinical_context = st.text_area("Optional: Clinical summary (symptoms, known diagnoses, exam findings, etc.)", max_chars=10000, height=150)
 
+# --- STEP 3: REGION SELECTION ---
 st.markdown("### Step 3: Select Regions to Analyze")
-region_options = [
-    "Multiple Regions (AI-based, recommended)",
+st.markdown("*Auto-detection of anatomical regions is planned, but currently disabled.*")
+regions = st.multiselect("Select all anatomical regions shown in the uploaded images:", [
     "Cervical Spine", "Thoracic Spine", "Lumbar Spine", "Pelvis / SI joints",
     "Hip", "Knee", "Ankle", "Foot", "Hand", "Wrist", "Elbow", "Shoulder"
-]
-selected_regions = st.multiselect("Select anatomical regions shown in the uploaded images:", region_options,
-                                   default=["Multiple Regions (AI-based, recommended)"])
-
-ai_detected_regions = ["Wrist", "Distal Forearm", "Carpal Bones"]  # mock-up result
-if "Multiple Regions (AI-based, recommended)" in selected_regions:
-    st.markdown("**System has identified the following regions in the uploaded images:**")
-    st.markdown(", ".join(ai_detected_regions))
-    regions = ai_detected_regions
-else:
-    regions = selected_regions
+])
 
 mode = st.radio("Report type:", ["Single report", "Report with interval change analysis"])
 
@@ -83,11 +80,9 @@ else:
     st.warning("Please confirm that all imaging has been uploaded before proceeding.")
 
 if confirmed_all and ready:
-    st.success("Generating structured report...")
-
+    findings = {}
     allow_freeform = st.checkbox("Allow free-form description without selecting anatomical regions")
 
-    findings = {}
     if not allow_freeform:
         for region in regions:
             st.markdown(f"#### {region}")
@@ -96,34 +91,17 @@ if confirmed_all and ready:
         freeform_text = st.text_area("Enter full findings (all regions or general impressions):", height=250)
         findings["General"] = freeform_text
 
-    # Summary option
     summary = st.text_area("Optional: Add a brief EMR-friendly summary (will be included separately):", height=200)
 
-    # Generate report text
-    full_report = f"RheumaView™ Structured Report\nDate of Current Study: {study_date}\n\n"
-    full_report += f"Patient Age: {age}\nSex at Birth: {sex}\n"
-
-    full_report += "\nRheumaView™ Report\nDate of Current Study: {}\n".format(study_date)
-    for region, text in findings.items():
-        full_report += f"---\nRegion: {region}\n{text}\n"
-
-    if compare_enabled and prior_images:
-        full_report += "\n---\nInterval Comparison:\n"
-        for label, data in prior_images.items():
-            full_report += f"{label} ({data['date']}): Compared for progression/regression relative to current study.\n"
-
-    if summary.strip():
-        full_report += "\n\n=== EMR Summary ===\n" + summary.strip()
-
-    # Generate Word document
+    # --- Report Construction ---
     doc = Document()
-    doc.add_heading("RheumaView™ Structured Report", 0)
+    doc.add_heading("RheumaView Structured Report", 0)
     doc.add_paragraph(f"Date of Current Study: {study_date}")
     doc.add_paragraph(f"Patient Age: {age}")
     doc.add_paragraph(f"Sex at Birth: {sex}")
     doc.add_paragraph("")
 
-    doc.add_heading("RheumaView™ Report", level=1)
+    doc.add_heading("RheumaView Report", level=1)
     for region, text in findings.items():
         doc.add_heading(f"{region}", level=2)
         doc.add_paragraph(text)
@@ -134,7 +112,7 @@ if confirmed_all and ready:
             doc.add_paragraph(f"{label} ({data['date']}): Compared for progression/regression relative to current study.")
 
     if summary.strip():
-        doc.add_paragraph("\n")
+        doc.add_paragraph("")
         doc.add_paragraph("=== EMR Summary ===")
         doc.add_paragraph(summary.strip())
 
