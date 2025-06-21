@@ -1,4 +1,3 @@
-
 import streamlit as st
 from fpdf import FPDF
 from PIL import Image
@@ -16,6 +15,7 @@ st.title("🟩 RheumaView™")
 st.subheader("Radiologic Reasoning for Rheumatologists")
 st.caption("Curated by Dr. Olga Goodman")
 
+# --- STEP 1: CURRENT IMAGING ---
 st.markdown("### Step 1: Upload Current Imaging")
 uploaded_current = st.file_uploader(
     "Upload current radiographic images (multiple files allowed)", 
@@ -26,16 +26,19 @@ uploaded_current = st.file_uploader(
 today_default = datetime.date.today()
 study_date = st.date_input("Date of current study:", value=today_default)
 
+# --- STEP 2: REGION SELECTION ---
 st.markdown("### Step 2: Select Regions to Analyze")
 regions = st.multiselect("Select all anatomical regions shown in the uploaded images:", [
     "Cervical Spine", "Thoracic Spine", "Lumbar Spine", "Pelvis / SI joints",
     "Hip", "Knee", "Ankle", "Foot", "Hand", "Wrist", "Elbow", "Shoulder"
 ])
 
+# --- STEP 3: REPORT MODE ---
 mode = st.radio("Report type:", ["Single report", "Report with interval change analysis"])
 
 compare_enabled = False
 prior_images = {}
+
 if mode == "Report with interval change analysis":
     compare_enabled = st.checkbox("Compare with prior imaging?")
     if compare_enabled:
@@ -57,6 +60,7 @@ if mode == "Report with interval change analysis":
             if files:
                 prior_images[f"Prior_{i+1}"] = {"files": files, "date": prior_date}
 
+# --- CONFIRMATION ---
 confirmed_all = st.checkbox("I confirm that all relevant imaging has been uploaded.")
 
 st.markdown("---")
@@ -65,6 +69,7 @@ if confirmed_all:
 else:
     st.warning("Please confirm that all imaging has been uploaded before proceeding.")
 
+# --- REPORT GENERATION ---
 if confirmed_all and ready:
     st.success("📝 Generating structured report...")
 
@@ -73,10 +78,10 @@ if confirmed_all and ready:
         st.markdown(f"#### {region}")
         findings[region] = st.text_area(f"Enter detailed findings for {region}:", height=150)
 
-    # Summary option
+    # --- OPTIONAL EMR SUMMARY ---
     summary = st.text_area("Optional: Add a brief EMR-friendly summary (will be included separately):", height=200)
 
-    # Generate report text
+    # --- COMPOSE REPORT TEXT ---
     full_report = f"RheumaView™ Report\nDate of Current Study: {study_date}\n\n"
     for region, text in findings.items():
         full_report += f"---\nRegion: {region}\n{text}\n"
@@ -86,16 +91,20 @@ if confirmed_all and ready:
         for label, data in prior_images.items():
             full_report += f"{label} ({data['date']}): Compared for progression/regression relative to current study.\n"
 
-    # Append summary
     if summary.strip():
         full_report += "\n\n=== EMR Summary ===\n" + summary.strip()
 
-    # PDF Export
+    # --- PDF EXPORT ---
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+
+    # Register DejaVu font for Unicode support
+    pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+    pdf.set_font("DejaVu", size=12)
+
     for line in full_report.split("\n"):
         pdf.multi_cell(0, 10, line)
+
     pdf.output("rheumaview_structured_report.pdf")
 
     with open("rheumaview_structured_report.pdf", "rb") as file:
