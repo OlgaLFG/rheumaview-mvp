@@ -41,6 +41,7 @@ age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1)
 sex = st.radio("Sex at Birth:", ["Female", "Male", "Other / Intersex"])
 name = st.text_input("Patient Name or ID (optional):")
 dob = st.text_input("Date of Birth (optional):")
+mrn = st.text_input("Medical Record Number (optional):")
 clinical_context = st.text_area("Optional: Clinical summary (symptoms, known diagnoses, exam findings, etc.)",
                                 max_chars=10000, height=150)
 
@@ -80,10 +81,13 @@ if mode == "Report with interval change analysis":
 
 st.markdown("### Step 4: Report Formatting Options")
 include_header_footer = st.checkbox("Include custom header and footer?")
+
+default_header = st.text_input("Default Header (editable later):", value="")
+default_footer = st.text_input("Default Footer (editable later):", value="")
+
 if include_header_footer:
-    st.markdown("Enter default values or leave empty and fill later.")
-    custom_header = st.text_area("Enter Header Text", height=80)
-    custom_footer = st.text_area("Enter Footer Text", height=80)
+    custom_header = default_header
+    custom_footer = default_footer
 else:
     custom_header = ""
     custom_footer = ""
@@ -124,6 +128,8 @@ if confirmed_all and ready:
         doc.add_paragraph(f"Patient: {name}")
     if dob:
         doc.add_paragraph(f"DOB: {dob}")
+    if mrn:
+        doc.add_paragraph(f"MRN: {mrn}")
     doc.add_paragraph(f"Age: {age}")
     doc.add_paragraph(f"Sex: {sex}")
 
