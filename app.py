@@ -19,9 +19,9 @@ st.caption("Curated by Dr. Olga Goodman")
 st.markdown("### Step 1: Upload Current Imaging")
 uploaded_current = st.file_uploader(
     "Upload current radiographic images (multiple files allowed)", 
-    type=["jpg", "jpeg", "png", "dcm"], 
-    accept_multiple_files=True
-)
+    type=["jpg", "jpeg", "png", "webp", "dcm", "bmp", "tif", "tiff", "heic"], 
+
+    accept_multiple_files=True)
 
 today_default = datetime.date.today()
 study_date = st.date_input("Date of current study:", value=today_default)
