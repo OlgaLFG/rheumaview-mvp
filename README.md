@@ -30,3 +30,35 @@ git clone https://github.com/OlgaLFG/rheumaview-mvp.git
 cd rheumaview-mvp
 pip install -r requirements.txt
 streamlit run app.py
+
+# RheumaView™
+
+**AI-assisted radiologic reasoning tool**  
+Curated by **Dr. Olga Goodman, Rheumatologist**  
+© 2025 Olga Goodman. All rights reserved.
+
+---
+
+## 🔒 License
+
+This project is licensed under a **Custom Attribution License**.
+
+Use is permitted for personal, clinical, or academic non-commercial purposes only.
+
+You **may not**:
+- modify the software
+- redistribute it
+- use it commercially or integrate it into any third-party system
+
+See the full LICENSE file for details.
+
+**Required Attribution in any use:**
+
+> © Curated by Dr. Olga Goodman | RheumaView™ 2025
+
+---
+
+## 📬 Contact
+
+For inquiries or permissions, please contact: **ofitasova@yahoo.com**
+
