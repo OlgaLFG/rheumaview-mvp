@@ -18,11 +18,20 @@ st.markdown("---")
 # --- Step 1: Imaging Upload ---
 st.markdown("#### Step 1: Upload Current Imaging")
 current_images = st.file_uploader(
-    "Upload current radiographic images (multiple files allowed)",
-    type=["jpg", "jpeg", "png", "dcm", "webp", "bmp", "tiff"],
+    "Upload up to 5 current radiographic images (jpg/png/webp only)",
+    type=["jpg", "jpeg", "png", "webp"],
     accept_multiple_files=True,
     key="current_images"
 )
+
+if current_images and len(current_images) > 5:
+    st.warning("Please upload no more than 5 images at a time.")
+    st.stop()
+    
+if current_images:
+    st.write(f"✅ Uploaded {len(current_images)} file(s):")
+    for file in current_images:
+        st.write(f"• {file.name}")
 
 current_date = st.text_input("Date of current study:", value=str(datetime.date.today()))
 
