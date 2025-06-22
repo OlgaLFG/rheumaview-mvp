@@ -1,7 +1,6 @@
-# 🟩 RheumaView™  
+# 🟩 RheumaView™  AI-assisted radiology
 **Radiologic Reasoning for Rheumatologists**  
-_Curated by Dr. Olga Goodman_
-
+ curated by Dr. Olga Goodman 
 ---
 
 ## 🎯 Purpose
@@ -13,7 +12,7 @@ It bridges the gap between standard radiology reports and the clinical needs of 
 
 ## 🧠 Features
 
-- ✅ **Targeted for Rheumatologic Care**: SI joints, spine (DISH), hands, feet
+- ✅ **Targeted for Rheumatologic Care**: Axial skeleton and peripheral joint, inflammatory vs degenerative changes
 - 📊 **Confidence-Based Templates**: Low / Moderate / High certainty
 - ✍️ **Manual Input Mode**: Enter your own radiographic observations
 - 📄 **PDF Export**: Single reports or full session summaries
