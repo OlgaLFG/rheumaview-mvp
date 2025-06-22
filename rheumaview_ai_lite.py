@@ -3,48 +3,44 @@ import streamlit as st
 import datetime
 from docx import Document
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="RheumaView AI Lite (Session State Fixed)", layout="wide")
+st.set_page_config(page_title="RheumaView AI Lite (Final Stable)", layout="wide")
 
-# --- HEADER ---
-st.title("RheumaView AI Lite")
-st.subheader("Auto-filled Structured Report using session state")
-st.caption("Curated by Dr. Olga Goodman")
+st.title("RheumaView AI Lite — Final Version")
+st.caption("Auto-generating radiology reports with structured templates. Curated by Dr. Olga Goodman")
 
-# --- STUDY DATA ---
-today_default = datetime.date.today()
-study_date = st.date_input("Date of current study:", value=today_default)
-age = st.number_input("Patient Age:", min_value=0, max_value=120, step=1, value=50)
-sex = st.radio("Sex at Birth:", ["Female", "Male", "Other / Intersex"])
-name = st.text_input("Patient Name:", value="Name Name")
-mrn = st.text_input("Medical Record Number:", value="1234567")
-dob_input = st.text_input("Date of Birth (YYYY-MM-DD):", value="2000-01-01")
-clinical_context = st.text_area("Clinical context:", value="chronic low back pain, worse last 4 days", height=100)
+# --- Initialize session state ---
+if "generate_mode" not in st.session_state:
+    st.session_state.generate_mode = False
 
-regions = st.multiselect("Select regions to analyze:", [
+# --- Demographics ---
+study_date = st.date_input("Date of current study", datetime.date.today())
+age = st.number_input("Patient Age", min_value=0, max_value=120, step=1)
+sex = st.radio("Sex at Birth", ["Female", "Male", "Other / Intersex"])
+name = st.text_input("Patient Name", value="Name Name")
+mrn = st.text_input("Medical Record Number", value="1234567")
+dob_input = st.text_input("Date of Birth (YYYY-MM-DD)", value="2000-01-01")
+clinical_context = st.text_area("Clinical context", value="worsening chronic low back pain")
+
+# --- Regions ---
+regions = st.multiselect("Select regions to analyze", [
     "Multiple Regions", "SI Joints", "Spine (DISH)", "Peripheral Joints"
 ], default=["Multiple Regions"])
 
-st.markdown("---")
-
-# --- Expand logic ---
 if "Multiple Regions" in regions:
     expanded_regions = ["SI Joints", "Spine (DISH)", "Peripheral Joints"]
 else:
     expanded_regions = regions
 
-# --- SESSION STATE FIELDS ---
+st.markdown("---")
 
+# --- Input Forms ---
 if "SI Joints" in expanded_regions:
-    st.header("Sacroiliac Joints (SI)")
-    st.radio("Confidence level (SI):", ["Low", "Moderate", "High"], key="si_level")
+    st.radio("Confidence level: SI Joints", ["Low", "Moderate", "High"], key="si_level")
 
 if "Spine (DISH)" in expanded_regions:
-    st.header("Spinal Findings (DISH)")
-    st.radio("Confidence level (DISH):", ["Moderate", "High"], key="dish_level")
+    st.radio("Confidence level: DISH", ["Moderate", "High"], key="dish_level")
 
 if "Peripheral Joints" in expanded_regions:
-    st.header("Peripheral Joints")
     st.text_input("Joint space narrowing (symmetry + location):", key="joint_space")
     st.text_input("Erosions (present/absent, location, character):", key="erosions")
     st.selectbox("Bone density:", ["Normal", "Juxta-articular osteopenia"], key="density")
@@ -54,43 +50,36 @@ if "Peripheral Joints" in expanded_regions:
     st.text_input("Other findings (ankylosis, subluxation, etc.):", key="other")
     st.text_area("Impression:",
         "Imaging features are [ / are not ] consistent with an inflammatory arthropathy.\n"
-        "The findings may suggest [RA / PsA / gout / EOA / OA], based on [key features].",
-        height=150,
-        key="impression"
-    )
+        "The findings may suggest [RA / PsA / gout / EOA / OA], based on [key features].", key="impression")
 
 st.markdown("---")
-confirmed = st.checkbox("Confirm all data is ready for report generation")
 
-if confirmed and st.button("Generate DOCX Report"):
-    compiled_findings = ""
+if st.button("Generate Report"):
+    st.session_state.generate_mode = True
+
+if st.session_state.generate_mode:
+    compiled = ""
 
     if "SI Joints" in expanded_regions:
-        level = st.session_state.si_level
-        if level == "Low":
-            text = ("Sacroiliac joints are symmetric. Mild subchondral sclerosis without erosions or joint space narrowing. "
-                    "Findings may represent early sacroiliitis or degenerative change.")
-        elif level == "Moderate":
-            text = ("Mild irregularity and sclerosis of bilateral sacroiliac joints, more pronounced on iliac sides. "
-                    "No erosions or ankylosis. Findings suggest early sacroiliitis.")
+        lvl = st.session_state.si_level
+        if lvl == "Low":
+            txt = "Sacroiliac joints are symmetric. Mild subchondral sclerosis without erosions or joint space narrowing. Findings may represent early sacroiliitis or degenerative change."
+        elif lvl == "Moderate":
+            txt = "Mild irregularity and sclerosis of bilateral sacroiliac joints, more pronounced on iliac sides. No erosions or ankylosis. Findings suggest early sacroiliitis."
         else:
-            text = ("Bilateral sacroiliac joint sclerosis, erosions, and joint space narrowing. "
-                    "Findings consistent with Grade II–III sacroiliitis.")
-        compiled_findings += "\n**SI Joints**\n" + text + "\n"
+            txt = "Bilateral sacroiliac joint sclerosis, erosions, and joint space narrowing. Findings consistent with Grade II–III sacroiliitis."
+        compiled += "\n**SI Joints**\n" + txt + "\n"
 
     if "Spine (DISH)" in expanded_regions:
-        level = st.session_state.dish_level
-        if level == "Moderate":
-            text = ("Anterior vertebral body osteophytes and subtle ossification along the anterior longitudinal ligament "
-                    "at T12–L2, with preserved disc spaces. Findings may be consistent with early DISH.")
+        lvl = st.session_state.dish_level
+        if lvl == "Moderate":
+            txt = "Anterior vertebral body osteophytes and subtle ossification along the anterior longitudinal ligament at T12–L2, with preserved disc spaces. Findings may be consistent with early DISH."
         else:
-            text = ("Flowing ossification along the anterior longitudinal ligament spanning T12 to L3 with preserved disc "
-                    "heights and absence of significant degenerative change. Findings consistent with diffuse idiopathic "
-                    "skeletal hyperostosis (DISH).")
-        compiled_findings += "\n**Spine (DISH)**\n" + text + "\n"
+            txt = "Flowing ossification along the anterior longitudinal ligament spanning T12 to L3 with preserved disc heights and absence of significant degenerative change. Findings consistent with diffuse idiopathic skeletal hyperostosis (DISH)."
+        compiled += "\n**Spine (DISH)**\n" + txt + "\n"
 
     if "Peripheral Joints" in expanded_regions:
-        compiled_findings += f"""\n**Peripheral Joints**
+        compiled += f"""\n**Peripheral Joints**
 Joint space narrowing: {st.session_state.joint_space}
 Erosions: {st.session_state.erosions}
 Bone density: {st.session_state.density}
@@ -111,20 +100,14 @@ Impression: {st.session_state.impression}\n"""
     doc.add_paragraph(f"Sex: {sex}")
     doc.add_paragraph(f"Clinical context: {clinical_context}")
     doc.add_heading("RheumaView Report", level=1)
-    doc.add_paragraph(compiled_findings.strip())
-
+    doc.add_paragraph(compiled.strip())
     doc.add_heading("Interval Comparison", level=2)
     doc.add_paragraph("Prior_1 (2025-06-19): Compared for progression/regression relative to current study.")
-
     doc.add_paragraph("\nMy Footer")
-    filename = "rheumaview_structured_session_fixed.docx"
-    doc.save(filename)
 
-    with open(filename, "rb") as file:
-        st.download_button(
-            label="Download Word Report",
-            data=file,
-            file_name=filename,
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-    st.success("✅ Report compiled and ready for download")
+    filename = "rheumaview_structured_report_FINAL_OK.docx"
+    doc.save(filename)
+    with open(filename, "rb") as f:
+        st.download_button("Download Word Report ✅", data=f, file_name=filename, mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+    st.success("✅ Report successfully compiled.")
